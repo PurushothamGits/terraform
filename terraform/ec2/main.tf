@@ -1,26 +1,18 @@
-pipeline {
-  agent any
-  stages {
-    stage ('Codechekout') {
-      steps {
-        checkout scm
-      }
-    }
-    stage('Terraform') {
-      steps {
-        dir('/var/lib/jenkins/workspace/terraform-ec2/Terraform/ec2/') {
-          withEnv(["Instance_Type=${params.Instance_Type}"]) {
-            sh "terraform init"
-            sleep 20
-            sh 'terraform apply -var "Instance_Type=${Instance_Type}" -auto-approve'
-          }
-        }
-      }
-    }
-    stage ('Output') {
-      steps {
-        echo "${Instance_Type} has sucesfully created"
-      }
-    }
+module "ec2_instance" {
+  source  = "terraform-aws-modules/ec2-instance/aws"
+
+  name = "MNP-Terraform"
+
+  instance_type          = var.INSTANCE_TYPE
+  key_name               = "MyDevops_NV"
+  monitoring             = false
+  vpc_security_group_ids = ["sg-0969e41e0d5891767"]
+  subnet_id              = "subnet-0bc5686fe387a6256"
+
+  tags = {
+    Terraform   = "true"
+    Environment = "dev"
+    project     = "My Project"
+    owner       = "Devops"
   }
 }
